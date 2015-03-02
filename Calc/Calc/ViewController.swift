@@ -10,7 +10,7 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    var operandStack = Array<Double>()
+    var engine = CalcEngine()
 
     var userIsEnteringNumber = false
     
@@ -41,27 +41,28 @@ class ViewController: UIViewController {
     
     
     @IBAction func op(sender: UIButton) {
-        let op = sender.currentTitle!
-        
         if userIsEnteringNumber {
             enter()
         }
-        
-        switch(op){
-        case "*": performOperation {$1 * $0}
-        case "/": performOperation {$1 / $0}
-        case "+": performOperation {$1 + $0}
-        case "-": performOperation {$1 - $0}
-        case "√": performOperation { sqrt($0) }
-        default: break
+        if let op = sender.currentTitle {
+            if let result = engine.performOperation(op) {
+                displayValue = result
+            }
+            else {
+                displayValue = 0 // hacky .. see below
+            }
         }
     }
     
     
     @IBAction func enter() {
         userIsEnteringNumber = false
-        operandStack.append(displayValue)
-        println("operandStack = \(operandStack)")
+        if let result = engine.pushOperand(displayValue) {
+            displayValue = result
+        }
+        else {
+            displayValue = 0 // a bit hacky .. display value should accept an optional. Allow display of an err message.
+        }
     }
 
     
@@ -74,28 +75,6 @@ class ViewController: UIViewController {
 //        super.didReceiveMemoryWarning()
 //        // Dispose of any resources that can be recreated.
 //    }
-
-
-    private
-    
-    // had to move definitions to private as it seemed to collide with another
-    // objective C definition of the same name elsewhere.
-    
-    // Closure that accepts a function with type signature (Double, Double) -> Double
-    func performOperation(operation: (Double, Double) -> Double) {
-        if operandStack.count >= 2 {
-            displayValue = operation(operandStack.removeLast(), operandStack.removeLast())
-            enter()
-        }
-    }
-    
-    // Closure that accepts a function with type Double -> Double
-    func performOperation(operation: Double -> Double) {
-        if operandStack.count >= 1 {
-            displayValue = operation(operandStack.removeLast())
-            enter()
-        }
-    }
     
 }
 
